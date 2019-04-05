@@ -1,0 +1,28 @@
+--cpu Cortex-M4.fp
+"vet6\startup_stm32f407xx.o"
+"vet6\main.o"
+"vet6\gpio.o"
+"vet6\tim.o"
+"vet6\usart.o"
+"vet6\stm32f4xx_it.o"
+"vet6\stm32f4xx_hal_msp.o"
+"vet6\stm32f4xx_hal_tim.o"
+"vet6\stm32f4xx_hal_tim_ex.o"
+"vet6\stm32f4xx_hal_uart.o"
+"vet6\stm32f4xx_hal_rcc.o"
+"vet6\stm32f4xx_hal_rcc_ex.o"
+"vet6\stm32f4xx_hal_flash.o"
+"vet6\stm32f4xx_hal_flash_ex.o"
+"vet6\stm32f4xx_hal_flash_ramfunc.o"
+"vet6\stm32f4xx_hal_gpio.o"
+"vet6\stm32f4xx_hal_dma_ex.o"
+"vet6\stm32f4xx_hal_dma.o"
+"vet6\stm32f4xx_hal_pwr.o"
+"vet6\stm32f4xx_hal_pwr_ex.o"
+"vet6\stm32f4xx_hal_cortex.o"
+"vet6\stm32f4xx_hal.o"
+"vet6\system_stm32f4xx.o"
+--library_type=microlib --strict --scatter "VET6\VET6.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "VET6.map" -o VET6\VET6.axf

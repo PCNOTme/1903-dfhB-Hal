@@ -44,6 +44,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+#define Echo1_Trig_GPIO_PIN                       GPIO_PIN_12
+#define Echo1_Trig_GPIO                           GPIOD
 
 #define  P_DATA      4                                 //P参数
 #define  I_DATA      0                                //I参数
@@ -75,6 +77,16 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
+typedef struct              //测量高电平脉宽
+{   
+	uint8_t   ucFinishFlag;
+	uint8_t   ucStartFlag;
+	uint16_t  usCtr;
+	uint16_t  usPeriod;
+}STRUCT_CAPTURE;
+
+STRUCT_CAPTURE strCapture = { 0, 0, 0 };
+
 typedef struct 
 {
    __IO int      SetPoint;                                 //设定目标 Desired Value
@@ -98,7 +110,7 @@ static PID *sptr = &sPID;
 /* USER CODE BEGIN 0 */
 void IncPIDInit(void);
 int IncPIDCalc(int NextPoint);
-
+void HcSr04_Delay(__IO uint32_t i);
 /* USER CODE END 0 */
 
 /**
@@ -109,7 +121,8 @@ int IncPIDCalc(int NextPoint);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	uint32_t temp;
+  uint32_t ulTmrClk, ulTime;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -133,33 +146,53 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
 	IncPIDInit();
 	/* 启动定时器 */
 	HAL_TIM_Base_Start(&htim1);
+	HAL_TIM_Base_Start(&htim3);
+	HAL_TIM_Base_Start(&htim4);
 	  /* 启动定时器通道和互补通道PWM输出 */
   HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Start(&htim1,TIM_CHANNEL_1);
-	
-	HAL_TIM_Base_Start(&htim3);
+  HAL_TIMEx_PWMN_Start(&htim1,TIM_CHANNEL_1);	
+
   HAL_TIM_IC_Start_IT(&htim3,TIM_CHANNEL_1);
+	HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
 	
 	start_flag=1; 
-	printf("增量式PID算法控制电机旋转\n");
-
+	printf("增量式PID算法控制电机旋转\r\n");
+	printf("超声波输入捕获测试\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	sptr->SetPoint=10000;           //设定目标Desired Value
+	  /* 获取定时器时钟周期 */	
+	ulTmrClk = HAL_RCC_GetHCLKFreq()/167;   
   while (1)
   {
 	
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	
+	  HAL_GPIO_WritePin(Echo1_Trig_GPIO,Echo1_Trig_GPIO_PIN,GPIO_PIN_SET);
+		HcSr04_Delay(500);
+    HAL_GPIO_WritePin(Echo1_Trig_GPIO,Echo1_Trig_GPIO_PIN,GPIO_PIN_RESET);
+//		printf("Triging……\r\n");
+//		HAL_Delay(2000);   
+  
+    /* 完成测量高电平脉宽 */
+    if(strCapture.ucFinishFlag == 1 )
+		{
+      /* 计算高电平计数值 */
+			ulTime = strCapture .usPeriod * 0xFFFF + strCapture .usCtr;
+      temp=((ulTime % ulTmrClk)*340)/(1000*2);
+      printf ( ">>测得距离为：%dmm\r\n",temp); 
+      strCapture .ucFinishFlag = 0;		
+      HAL_Delay(1000);       
+		}
   }
   /* USER CODE END 3 */
 
@@ -259,11 +292,11 @@ void HAL_SYSTICK_Callback(void)
       // 11：编码器线数(转速一圈输出脉冲数)
       // 34：电机减数比，内部电机转动圈数与电机输出轴转动圈数比，即减速齿轮比      
       cal=sptr->SetPoint;
-			printf("\n设度中断时间 ->   %ds     ",time_count);     
-      printf("\n设定目标速度 ->%d个脉冲     ",sptr->SetPoint);        
-      printf("当前电机速度-> %d个脉冲\n     ",count);
-			printf("差值电机速度-> %d个脉冲\n     ",count-sptr->SetPoint);     
-      printf("增量式PID算法计数结果值：%d   设置新的占空比为：%d\r\n",para,PWM_Duty);
+//			printf("\n设度中断时间 ->   %ds     ",time_count);     
+//      printf("\n设定目标速度 ->%d个脉冲     ",sptr->SetPoint);        
+//      printf("当前电机速度-> %d个脉冲\n     ",count);
+//			printf("差值电机速度-> %d个脉冲\n     ",count-sptr->SetPoint);     
+//      printf("增量式PID算法计数结果值：%d   设置新的占空比为：%d\r\n",para,PWM_Duty);
       
 			__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PWM_Duty);
       time_count=0;      
@@ -271,16 +304,77 @@ void HAL_SYSTICK_Callback(void)
   }
 }
 
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &(htim3))
+	{
+		CaptureNumber++;
+	}
+	
+	else if(htim == &(htim4))
+	{
+		  TIM_IC_InitTypeDef sConfigIC;
+		
+			if ( strCapture .ucStartFlag == 0 )
+			{
+				htim4.Instance->CNT=0; // 清零定时器计数
+				strCapture .usPeriod = 0;			
+				strCapture .usCtr = 0;
+				
+				// 配置输入捕获参数，主要是修改触发电平
+				sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+				sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+				sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+				sConfigIC.ICFilter = 0;
+				HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1);
+				// 清除中断标志位
+				__HAL_TIM_CLEAR_IT(htim, TIM_IT_CC1);
+				// 启动输入捕获并开启中断
+				HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);    
+				strCapture .ucStartFlag = 1;			
+			}		
+			
+			else
+			{  
+				// 获取定时器计数值
+				strCapture .usCtr = HAL_TIM_ReadCapturedValue(&htim4,TIM_CHANNEL_1);
+				// 配置输入捕获参数，主要是修改触发电平
+				sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+				sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+				sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+				sConfigIC.ICFilter = 0;
+				HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1);
+				
+				// 清除中断标志位
+				__HAL_TIM_CLEAR_IT(htim, TIM_IT_CC1); 
+				// 启动输入捕获并开启中断
+				HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);    
+				strCapture .ucStartFlag = 0;			
+				strCapture .ucFinishFlag = 1;    
+			}
+	}
+	
+}
+
 
 /**
-  * 函数功能: 定时器输入捕获中断回调函数
+  * 函数功能: 非阻塞模式下定时器的回调函数
   * 输入参数: htim：定时器句柄
   * 返 回 值: 无
   * 说    明: 无
   */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  CaptureNumber++;
+	if(htim == &(htim4))
+	{
+		strCapture .usPeriod ++;
+	} 
+}
+
+
+void HcSr04_Delay(__IO uint32_t i){
+	
+	while(i--);
 }
 
 
@@ -307,6 +401,7 @@ int IncPIDCalc(int NextPoint)
   sptr->LastError=iError;
   return(iIncpid);                                    //返回增量值
 }
+
 
 /* USER CODE END 4 */
 

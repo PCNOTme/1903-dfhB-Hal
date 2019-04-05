@@ -55,6 +55,10 @@
 #define Motor1_2_pwm_GPIO_Port GPIOA
 #define Motor1_1_pwm_Pin GPIO_PIN_9
 #define Motor1_1_pwm_GPIO_Port GPIOE
+#define Echo1_Trig_Pin GPIO_PIN_11
+#define Echo1_Trig_GPIO_Port GPIOD
+#define Echo1_Echo_Pin GPIO_PIN_12
+#define Echo1_Echo_GPIO_Port GPIOD
 
 /* ########################## Assert Selection ############################## */
 /**

@@ -22,15 +22,55 @@ Dialog DLL:      TCM.DLL V1.14.4.0
  
 <h2>Project:</h2>
 F:\桌面资料本尊\科研与竞赛\【2019】dfh-B-Hal\dfh--stm32VET6\VET6\MDK-ARM\VET6.uvprojx
-Project File Date:  04/04/2019
+Project File Date:  04/05/2019
 
 <h2>Output:</h2>
 Build target 'VET6'
-compiling main.c...
-linking...
-Program Size: Code=9144 RO-data=448 RW-data=36 ZI-data=1252  
-FromELF: creating hex file...
-"VET6\VET6.axf" - 0 Error(s), 0 Warning(s).
+compiling echo.c...
+..\BSP\echo.c(13): error:  #20: identifier "Trig_U_GPIO_Port" is undefined
+                HAL_GPIO_WritePin(Trig_U_GPIO_Port,Trig_U_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(13): error:  #20: identifier "Trig_U_Pin" is undefined
+                HAL_GPIO_WritePin(Trig_U_GPIO_Port,Trig_U_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(18): error:  #20: identifier "Trig_LU_GPIO_Port" is undefined
+                HAL_GPIO_WritePin(Trig_LU_GPIO_Port,Trig_LU_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(18): error:  #20: identifier "Trig_LU_Pin" is undefined
+                HAL_GPIO_WritePin(Trig_LU_GPIO_Port,Trig_LU_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(23): error:  #20: identifier "Trig_RU_GPIO_Port" is undefined
+                HAL_GPIO_WritePin(Trig_RU_GPIO_Port,Trig_RU_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(23): error:  #20: identifier "Trig_RU_Pin" is undefined
+                HAL_GPIO_WritePin(Trig_RU_GPIO_Port,Trig_RU_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(28): error:  #20: identifier "Trig_LD_GPIO_Port" is undefined
+                HAL_GPIO_WritePin(Trig_LD_GPIO_Port,Trig_LD_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(28): error:  #20: identifier "Trig_LD_Pin" is undefined
+                HAL_GPIO_WritePin(Trig_LD_GPIO_Port,Trig_LD_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(33): error:  #20: identifier "Trig_RD_GPIO_Port" is undefined
+                HAL_GPIO_WritePin(Trig_RD_GPIO_Port,Trig_RD_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(33): error:  #20: identifier "Trig_RD_Pin" is undefined
+                HAL_GPIO_WritePin(Trig_RD_GPIO_Port,Trig_RD_Pin,GPIO_PIN_SET);
+..\BSP\echo.c(46): error:  #20: identifier "htim9" is undefined
+        if(htim == &(htim9))
+..\BSP\echo.c(57): error:  #20: identifier "htim10" is undefined
+        else if(htim == &(htim10))
+..\BSP\echo.c(65): error:  #20: identifier "htim12" is undefined
+                else if(htim == &(htim12))
+..\BSP\echo.c(92): error:  #20: identifier "htim10" is undefined
+                        timHandle = &htim10;
+..\BSP\echo.c(98): error:  #20: identifier "htim9" is undefined
+                        timHandle = &htim9;
+..\BSP\echo.c(104): error:  #20: identifier "htim9" is undefined
+                        timHandle = &htim9;
+..\BSP\echo.c(110): error:  #20: identifier "htim12" is undefined
+                        timHandle = &htim12;
+..\BSP\echo.c(116): error:  #20: identifier "htim12" is undefined
+                        timHandle = &htim12;
+..\BSP\echo.c(178): error:  #20: identifier "htim9" is undefined
+        HAL_TIM_IC_Start_IT(&htim9,TIM_CHANNEL_1);
+..\BSP\echo.c(180): error:  #20: identifier "htim10" is undefined
+        HAL_TIM_IC_Start_IT(&htim10,TIM_CHANNEL_1);
+..\BSP\echo.c(181): error:  #20: identifier "htim12" is undefined
+        HAL_TIM_IC_Start_IT(&htim12,TIM_CHANNEL_1);
+..\BSP\echo.c: 0 warnings, 21 errors
+"VET6\VET6.axf" - 21 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -49,6 +89,7 @@ Package Vendor: ARM
 
    * Component: ARM::CMSIS:CORE:3.40.0
       Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
+Target not created.
 </pre>
 </body>
 </html>
